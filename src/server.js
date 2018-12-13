@@ -1,43 +1,90 @@
+const ROOT_PATH = process.cwd();
+
 const express = require('express')
 const bodyParser = require("body-parser");
+const compress = require('compression');
+const partialResponse = require('express-partial-response');
 const dynamic_routes = require('./routes/route');
 const cookieParser = require('cookie-parser')
 const cors = require("cors");
 const morgan = require('morgan')
 const errorhandler = require('errorhandler')
 const methodOverride = require('method-override')
+const config = require('./config');
+const pkg = require(`${ROOT_PATH}/package.json`);
 
 const app = express()
-const port = 3000
+//const port = 3000
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+const server = (() => {
+  const env = process.env.NODE_ENV;
+  let serverProcess;
 
-app.use(cookieParser())
-app.use(morgan('combined'))
-app.use(methodOverride('X-HTTP-Method-Override'))
+  const start = (callback) => {
 
-if (process.env.NODE_ENV === 'development') {
-  // only use in development
-  app.use(errorhandler({
-    log: errorNotification
-  }))
-}
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({
+      extended: true
+    }));
 
-function errorNotification(err, str, req) {
-  const title = 'Error in ' + req.method + ' ' + req.url
+    app.use(cookieParser())
+    app.use(morgan('combined'))
 
-  notifier.notify({
-    title: title,
-    message: str
-  })
-}
+    if (process.env.NODE_ENV === 'development') {
+      // only use in development
+      app.use(errorhandler({
+        log: errorNotification
+      }))
+    }
 
-app.use(cors());
+    function errorNotification(err, str, req) {
+      const title = 'Error in ' + req.method + ' ' + req.url
 
-app.get('/', (req, res) => res.send('Hello World!'))
-app.use('/events', dynamic_routes());
+      notifier.notify({
+        title: title,
+        message: str
+      })
+    }
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+    app.use('/', dynamic_routes());
+
+    app.set('json spaces', 2);
+    app.set('json replacer', (key, value) => {
+      if (typeof value === 'undefined') {
+        return null;
+      }
+      return value;
+    });
+
+    app.set('port', config.PORT);
+
+    app.use(cors(config.corsOptions));
+    app.use(compress());
+    app.use(partialResponse());
+
+    serverProcess = app.listen(app.get('port'), () => {
+      console.log('------------------------------------------------------------------');
+      console.log(`${pkg.name} - Version: ${pkg.version}`);
+      console.log('------------------------------------------------------------------');
+      console.log(`ATTENTION, ${env} ENVIRONMENT!`);
+      console.log('------------------------------------------------------------------');
+      console.log(`Express server listening on port: ${serverProcess.address().port}`);
+      console.log('------------------------------------------------------------------');
+
+      return callback(null, app);
+    });
+  };
+
+  const stop = (callback) => {
+    if (serverProcess) {
+      serverProcess.close(callback);
+    }
+  };
+
+  return {
+    start,
+    stop
+  };
+})();
+
+module.exports = server;
