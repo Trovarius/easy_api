@@ -84,9 +84,30 @@ module.exports = () => {
     const eventMiddlewares = getEventMiddlewares(eventConfig);
     const eventHandlers = getEventHandlers(eventConfig);
 
-    router.get(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
-      next();
-    })
+
+    switch (eventConfig.method.toLowerCase()) {
+      case "post":
+        router.post(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
+          next();
+        })
+        break;
+      case "put":
+        router.put(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
+          next();
+        })
+        break;
+      case "delete":
+        router.delete(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
+          next();
+        })
+        break;
+
+      default:
+        router.get(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
+          next();
+        })
+        break;
+    }
   })
 
   return router;

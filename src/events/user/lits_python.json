@@ -1,0 +1,9 @@
+{
+  "route": "/user/list",
+  "method": "GET",
+  "middlewares": ["timer.js"],
+  "handlers": [{
+    "type": "python",
+    "name": "user/list"
+  }]
+}
