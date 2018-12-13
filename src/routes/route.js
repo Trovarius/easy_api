@@ -1,11 +1,7 @@
 const fs = require('fs');
 var express = require('express')
 var router = express.Router()
-
-
-const {
-  routeDir
-} = require('../config')
+const config = require('../config')
 
 var walk = function (dir) {
   var results = [];

@@ -56,9 +56,9 @@ const server = (() => {
       return value;
     });
 
-    app.set('port', config.PORT);
+    app.set('port', config.get('PORT'));
 
-    app.use(cors(config.corsOptions));
+    app.use(cors(config.get('corsOptions')));
     app.use(compress());
     app.use(partialResponse());
 
