@@ -5,8 +5,9 @@ const path  = require("path");
 module.exports = nconf.argv()
 .env()
 .defaults({
-  "routeDir": path.join(process.cwd(), "src/events"),
-  "handlerDir": path.join(process.cwd(), "src/handlers"),
+  "eventsDir": path.join(process.cwd(), "src/events/"),
+  "handlersDir": path.join(process.cwd(), "src/handlers/"),
+  "middlewaresDir": path.join(process.cwd(), "src/middlewares/"),
   "PORT": 3000,
   "corsOptions": {
     "allowedOrigins": "*",

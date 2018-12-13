@@ -24,7 +24,7 @@ var walk = function (dir) {
 
 var normalizedPath = (path) => require("path").join(process.cwd(), "src", path);
 
-const middlewares = walk(normalizedPath("middlewares")).reduce((prev, acc) => {
+const middlewares = walk(config.get('middlewaresDir')).reduce((prev, acc) => {
   return Object.assign({}, prev, acc)
 })
 
@@ -59,16 +59,17 @@ const getEventHandlers = (eventConfig) => {
   if (!eventConfig.handlers || !eventConfig.handlers.length) return []
 
   return eventConfig.handlers.map(handler => {
+    
     if (handler.type == "node")
-      return require(normalizedPath('handlers/' + handler.name))
+      return require(config.get('handlersDir') + handler.name)
     else
-      return handlerByType(handler.type, normalizedPath('handlers/' + handler.name))
+      return handlerByType(handler.type, config.get('handlersDir') + handler.name)
   })
 }
 
 module.exports = () => {
 
-  walk(normalizedPath('events')).forEach(x => {
+  walk(config.get('eventsDir')).forEach(x => {
     console.log('initialzing route by file: ', Object.keys(x))
 
     const eventConfig = Object.values(x)[0];
