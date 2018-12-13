@@ -35,7 +35,6 @@ const middlewares = walk(normalizedPath("middlewares")).reduce((prev, acc) => {
 const getEventMiddlewares = (eventConfig) => {
   if (!eventConfig.middlewares || !eventConfig.middlewares.length) return []
 
-  console.log(middlewares);
   return eventConfig.middlewares.map(x => {
     const middleware = middlewares[x]
     if (middleware) {
@@ -44,11 +43,30 @@ const getEventMiddlewares = (eventConfig) => {
   })
 }
 
+const handlerByType = (type, filePath) => {
+  const spawn = require("child_process").spawn;
+  console.log(type, filePath);
+  return (req, res, next) => {
+    if (type === "python") {
+      const pythonProcess = spawn('python', [filePath + ".py", req, res]);
+
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(data.toString());
+        res.send(data.toString());
+        next();
+      });
+    }
+  }
+}
+
 const getEventHandlers = (eventConfig) => {
   if (!eventConfig.handlers || !eventConfig.handlers.length) return []
 
   return eventConfig.handlers.map(handler => {
-    return require(normalizedPath('handlers/' + handler.name))
+    if (handler.type == "node")
+      return require(normalizedPath('handlers/' + handler.name))
+    else
+      return handlerByType(handler.type, normalizedPath('handlers/' + handler.name))
   })
 }
 
