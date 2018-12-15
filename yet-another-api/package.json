@@ -1,12 +1,15 @@
 {
-  "name": "easy_api",
+  "name": "yet-another-api",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.js",
+  "main": "index.js",
   "scripts": {
     "start": "export NODE_ENV=dev && node index.js",
     "dev": "export NODE_ENV=dev && nodemon --inspect index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "yaa": "bin/yet-another-api.js"
   },
   "repository": {
     "type": "git",
