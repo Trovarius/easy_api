@@ -35,6 +35,10 @@ const server = (() => {
       app.use(errorhandler({
         log: errorNotification
       }))
+    } else {
+      app.use((err, req, res, next) => {
+        res.status(500).send('Something went wrong!' + +err)
+      })
     }
 
     function errorNotification(err, str, req) {
