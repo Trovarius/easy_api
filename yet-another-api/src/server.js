@@ -5,13 +5,14 @@ const bodyParser = require("body-parser");
 const compress = require('compression');
 const partialResponse = require('express-partial-response');
 const dynamic_routes = require('./routes/route');
-const cookieParser = require('cookie-parser')
 const cors = require("cors");
-const morgan = require('morgan')
+
 const errorhandler = require('errorhandler')
 const methodOverride = require('method-override')
 const config = require('./config');
 const pkg = require(`${ROOT_PATH}/package.json`);
+const defaultMiddlewares = require('./middlewares');
+
 
 const app = express()
 //const port = 3000
@@ -27,8 +28,11 @@ const server = (() => {
       extended: true
     }));
 
-    app.use(cookieParser())
-    app.use(morgan('combined'))
+    Object.keys(defaultMiddlewares).forEach(middlewareName => {
+      const middleware = defaultMiddlewares[middlewareName];
+
+      app.use(middleware(config.get(middlewareName)));
+    });
 
     if (process.env.NODE_ENV === 'development') {
       // only use in development

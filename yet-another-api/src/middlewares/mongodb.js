@@ -1,18 +1,23 @@
 var MongoClient = require('mongodb').MongoClient
-var config = require("../config");
 
-module.exports = (options) => async (req, res, next) => {
-  const dbConfig = config.get('DATABASE');
+module.exports = (options) => (req, res, next) => {
 
   try {
-    MongoClient.connect(db.config.url, (err, db) => {
-      if (err) throw err;
+    if (options) {
+      req.DB = (cb) => {
+        MongoClient.connect(options, (err, db) => {
+          if (err) throw err;
 
-      req.DB = db
-      next();
+          req.DB = db
+          cb(null, db)
 
-      db.close();
-    })
+          db.close();
+        });
+      }
+    }
+
+    next();
+
   } catch (error) {
     console.log(error);
     throw err

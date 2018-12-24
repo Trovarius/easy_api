@@ -1,0 +1,1 @@
+module.exports = (path) => require("path").join(process.cwd(), "src", path);
