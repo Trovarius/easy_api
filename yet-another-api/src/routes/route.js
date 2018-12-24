@@ -9,7 +9,7 @@ const {
 let middlewares = [];
 const middlewaresfiles = walk(config.get('middlewaresDir'));
 if (config.get('middlewaresDir') && middlewaresfiles.length) {
-  console.log('--------- middlewares routes -------', middlewaresfiles);
+
   let middlewares = middlewaresfiles.reduce((prev, acc) => {
     return Object.assign({}, prev, acc)
   })

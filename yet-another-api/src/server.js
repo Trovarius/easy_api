@@ -75,7 +75,9 @@ const server = (() => {
       console.log('------------------------------------------------------------------');
       console.log(`Express server listening on port: ${serverProcess.address().port}`);
       console.log('------------------------------------------------------------------');
-
+      console.log('DEFAULT MIDDLEWARES');
+      console.log(defaultMiddlewares);
+      console.log('------------------------------------------------------------------');
       return callback(null, app);
     });
   };
