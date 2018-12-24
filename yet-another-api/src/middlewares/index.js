@@ -2,6 +2,12 @@ const {
   walk
 } = require('../utils');
 
-module.exports = walk('./').reduce((prev, acc) => {
+const time = require('./request')
+
+const middlewares = walk(__dirname).reduce((prev, acc) => {
   return Object.assign({}, prev, acc)
 });
+
+console.log(middlewares);
+
+module.exports = middlewares

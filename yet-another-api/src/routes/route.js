@@ -6,12 +6,17 @@ const {
   walk
 } = require('../utils');
 
-const middlewares = walk(config.get('middlewaresDir')).reduce((prev, acc) => {
-  return Object.assign({}, prev, acc)
-})
+let middlewares = [];
+const middlewaresfiles = walk(config.get('middlewaresDir'));
+if (config.get('middlewaresDir') && middlewaresfiles.length) {
+  console.log('--------- middlewares routes -------', middlewaresfiles);
+  let middlewares = middlewaresfiles.reduce((prev, acc) => {
+    return Object.assign({}, prev, acc)
+  })
+}
 
 const getEventMiddlewares = (eventConfig) => {
-  if (!eventConfig.middlewares || !eventConfig.middlewares.length) return []
+  if (!eventConfig.middlewares || !eventConfig.middlewares.length || !middlewares.length) return []
 
   return eventConfig.middlewares.map(x => {
     const middleware = middlewares[x]

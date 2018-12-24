@@ -6,9 +6,7 @@ const compress = require('compression');
 const partialResponse = require('express-partial-response');
 const dynamic_routes = require('./routes/route');
 const cors = require("cors");
-
 const errorhandler = require('errorhandler')
-const methodOverride = require('method-override')
 const config = require('./config');
 const pkg = require(`${ROOT_PATH}/package.json`);
 const defaultMiddlewares = require('./middlewares');
@@ -31,19 +29,9 @@ const server = (() => {
     Object.keys(defaultMiddlewares).forEach(middlewareName => {
       const middleware = defaultMiddlewares[middlewareName];
 
-      app.use(middleware(config.get(middlewareName)));
+      if (typeof middleware === "function")
+        app.use(middleware(config.get(middlewareName)));
     });
-
-    if (process.env.NODE_ENV === 'development') {
-      // only use in development
-      app.use(errorhandler({
-        log: errorNotification
-      }))
-    } else {
-      app.use((err, req, res, next) => {
-        res.status(500).send('Something went wrong!' + +err)
-      })
-    }
 
     function errorNotification(err, str, req) {
       const title = 'Error in ' + req.method + ' ' + req.url
@@ -54,7 +42,22 @@ const server = (() => {
       })
     }
 
-    app.use('/', dynamic_routes());
+    if (process.env.NODE_ENV === 'development') {
+      // only use in development
+      app.use(errorhandler({
+        log: errorNotification
+      }))
+    } else {
+      app.use((err, req, res, next) => {
+        res.status(500).send('Something went wrong!' + err)
+      })
+    }
+
+    app.use('/healthcheck', (req, res, next) => {
+      res.ok('ok')
+    });
+
+    app.use('/events', dynamic_routes());
 
     app.set('json spaces', 2);
     app.set('json replacer', (key, value) => {

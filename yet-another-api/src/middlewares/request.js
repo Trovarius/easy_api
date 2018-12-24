@@ -2,7 +2,7 @@ const request = require('request');
 var rp = require('request-promise');
 
 module.exports = (options) => (req, res, next) => {
-  if (options.request) {
+  if (options) {
     Object.keys(options.request).forEach(x => {
       const request_config = options.request[x];
 
