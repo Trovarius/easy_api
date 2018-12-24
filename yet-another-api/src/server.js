@@ -2,16 +2,12 @@ const ROOT_PATH = process.cwd();
 
 const express = require('express')
 const bodyParser = require("body-parser");
-const compress = require('compression');
-const partialResponse = require('express-partial-response');
 const dynamic_routes = require('./routes/route');
-const cookieParser = require('cookie-parser')
-const cors = require("cors");
-const morgan = require('morgan')
 const errorhandler = require('errorhandler')
-const methodOverride = require('method-override')
 const config = require('./config');
 const pkg = require(`${ROOT_PATH}/package.json`);
+const defaultMiddlewares = require('./middlewares');
+
 
 const app = express()
 //const port = 3000
@@ -27,15 +23,12 @@ const server = (() => {
       extended: true
     }));
 
-    app.use(cookieParser())
-    app.use(morgan('combined'))
+    Object.keys(defaultMiddlewares).forEach(middlewareName => {
+      const middleware = defaultMiddlewares[middlewareName];
 
-    if (process.env.NODE_ENV === 'development') {
-      // only use in development
-      app.use(errorhandler({
-        log: errorNotification
-      }))
-    }
+      if (typeof middleware === "function")
+        app.use(middleware(config.get(middlewareName)));
+    });
 
     function errorNotification(err, str, req) {
       const title = 'Error in ' + req.method + ' ' + req.url
@@ -46,7 +39,22 @@ const server = (() => {
       })
     }
 
-    app.use('/', dynamic_routes());
+    if (process.env.NODE_ENV === 'development') {
+      // only use in development
+      app.use(errorhandler({
+        log: errorNotification
+      }))
+    } else {
+      app.use((err, req, res, next) => {
+        res.status(500).send('Something went wrong!' + err)
+      })
+    }
+
+    app.use('/healthcheck', (req, res, next) => {
+      res.ok('ok')
+    });
+
+    app.use('/events', dynamic_routes());
 
     app.set('json spaces', 2);
     app.set('json replacer', (key, value) => {
@@ -58,9 +66,6 @@ const server = (() => {
 
     app.set('port', config.get('PORT'));
 
-    app.use(cors(config.get('corsOptions')));
-    app.use(compress());
-    app.use(partialResponse());
 
     serverProcess = app.listen(app.get('port'), () => {
       console.log('------------------------------------------------------------------');
@@ -70,7 +75,9 @@ const server = (() => {
       console.log('------------------------------------------------------------------');
       console.log(`Express server listening on port: ${serverProcess.address().port}`);
       console.log('------------------------------------------------------------------');
-
+      console.log('DEFAULT MIDDLEWARES');
+      console.log(defaultMiddlewares);
+      console.log('------------------------------------------------------------------');
       return callback(null, app);
     });
   };

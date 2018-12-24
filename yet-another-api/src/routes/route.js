@@ -2,34 +2,21 @@ const fs = require('fs');
 var express = require('express')
 var router = express.Router()
 const config = require('../config')
+const {
+  walk
+} = require('../utils');
 
-var walk = function (dir) {
-  var results = [];
-  var list = fs.readdirSync(dir);
-  list.forEach(function (fileName) {
-    file = dir + '/' + fileName;
-    var stat = fs.statSync(file);
-    if (stat && stat.isDirectory()) {
-      /* Recurse into a subdirectory */
-      results = results.concat(walk(file));
-    } else {
-      /* Is a file */
-      results.push({
-        [fileName]: require(file)
-      });
-    }
-  });
-  return results;
+let middlewares = [];
+const middlewaresfiles = walk(config.get('middlewaresDir'));
+if (config.get('middlewaresDir') && middlewaresfiles.length) {
+
+  let middlewares = middlewaresfiles.reduce((prev, acc) => {
+    return Object.assign({}, prev, acc)
+  })
 }
 
-var normalizedPath = (path) => require("path").join(process.cwd(), "src", path);
-
-const middlewares = walk(config.get('middlewaresDir')).reduce((prev, acc) => {
-  return Object.assign({}, prev, acc)
-})
-
 const getEventMiddlewares = (eventConfig) => {
-  if (!eventConfig.middlewares || !eventConfig.middlewares.length) return []
+  if (!eventConfig.middlewares || !eventConfig.middlewares.length || !middlewares.length) return []
 
   return eventConfig.middlewares.map(x => {
     const middleware = middlewares[x]
@@ -59,7 +46,7 @@ const getEventHandlers = (eventConfig) => {
   if (!eventConfig.handlers || !eventConfig.handlers.length) return []
 
   return eventConfig.handlers.map(handler => {
-    
+
     if (handler.type == "node")
       return require(config.get('handlersDir') + handler.name)
     else
@@ -80,7 +67,6 @@ module.exports = () => {
 
     const eventMiddlewares = getEventMiddlewares(eventConfig);
     const eventHandlers = getEventHandlers(eventConfig);
-
 
     switch (eventConfig.method.toLowerCase()) {
       case "post":

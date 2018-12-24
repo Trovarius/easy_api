@@ -1,4 +1,5 @@
-module.exports = (req, res, next) => {
-  console.log('Time: ', Date.now())
+module.exports = (options) => (req, res, next) => {
+  const requestTime = Date.now();
+  req.requestTime = requestTime
   next()
 }

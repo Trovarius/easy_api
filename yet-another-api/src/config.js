@@ -11,7 +11,7 @@ module.exports = nconf
     "handlersDir": path.join(process.cwd(), "src/handlers/"),
     "middlewaresDir": path.join(process.cwd(), "src/middlewares/"),
     "PORT": 3000,
-    "corsOptions": {
+    "cors": {
       "allowedOrigins": "*",
       "headers": "*"
     }
