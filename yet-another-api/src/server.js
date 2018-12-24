@@ -2,10 +2,7 @@ const ROOT_PATH = process.cwd();
 
 const express = require('express')
 const bodyParser = require("body-parser");
-const compress = require('compression');
-const partialResponse = require('express-partial-response');
 const dynamic_routes = require('./routes/route');
-const cors = require("cors");
 const errorhandler = require('errorhandler')
 const config = require('./config');
 const pkg = require(`${ROOT_PATH}/package.json`);
@@ -69,9 +66,6 @@ const server = (() => {
 
     app.set('port', config.get('PORT'));
 
-    app.use(cors(config.get('corsOptions')));
-    app.use(compress());
-    app.use(partialResponse());
 
     serverProcess = app.listen(app.get('port'), () => {
       console.log('------------------------------------------------------------------');
