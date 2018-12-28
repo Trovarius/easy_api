@@ -3,6 +3,7 @@ var express = require('express')
 const config = require('../config')
 const events = require('events');
 const eventEmitter = new events.EventEmitter();
+let events = [];
 
 var router = express.Router()
 
@@ -94,8 +95,27 @@ const routeCallback = (actorConfig) => (req, res, next) => {
   next();
 };
 
-const buildEventSoursing = () => {
+const toCamelCase = function (str) {
+  return str
+    .replace(/\s(.)/g, function ($1) {
+      return $1.toUpperCase();
+    })
+    .replace(/\s/g, '')
+    .replace(/^(.)/, function ($1) {
+      return $1.toLowerCase();
+    });
+}
 
+const buildEventSoursing = (actorConfig) => {
+  const normalizeName = toCamelCase(actorConfig.route)
+
+  events.push({
+    [normalizeName]: (params) => {
+      eventEmitter.emit(normalizeName, params)
+    }
+  })
+
+  eventEmitter.on(normalizeName, actorConfig.action)
 }
 
 module.exports = () => {
