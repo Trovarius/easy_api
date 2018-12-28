@@ -1,7 +1,11 @@
 const fs = require('fs');
 var express = require('express')
-var router = express.Router()
 const config = require('../config')
+const events = require('events');
+const eventEmitter = new events.EventEmitter();
+
+var router = express.Router()
+
 const {
   walk
 } = require('../utils');
@@ -90,6 +94,10 @@ const routeCallback = (actorConfig) => (req, res, next) => {
   next();
 };
 
+const buildEventSoursing = () => {
+
+}
+
 module.exports = () => {
 
   walk(config.get('actorsDir')).forEach(x => {
@@ -100,8 +108,6 @@ module.exports = () => {
     if (!actorConfig.method) {
       console.log("Method for doest exists:", actorConfig.method.toLowerCase())
     }
-
-    console.log(actorConfig);
 
     const eventMiddlewares = getRouteMiddlewares(actorConfig);
 
