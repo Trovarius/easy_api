@@ -1,13 +1,19 @@
+const Joi = require('joi');
+
 module.exports = {
   middlewares: [
 
   ],
   body: {
-
+    name: Joi.string()
   },
-  action: (req, res, next) => {
-    res.send('handler helloworld');
-    next();
+  action: ({
+    name
+  }) => {
+    return {
+      name,
+      mensagem: 'oi'
+    }
   },
   tiggers: [
 

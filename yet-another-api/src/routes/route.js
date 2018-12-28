@@ -6,19 +6,19 @@ const {
   walk
 } = require('../utils');
 
-let middlewares = [];
-const middlewaresfiles = walk(config.get('middlewaresDir'));
-if (config.get('middlewaresDir') && middlewaresfiles.length) {
+let routeMiddlewares = require('../middlewares/routes');
 
-  let middlewares = middlewaresfiles.reduce((prev, acc) => {
-    return Object.assign({}, prev, acc)
-  })
-}
+console.log(routeMiddlewares)
 
-const getEventMiddlewares = (eventConfig) => {
-  if (!eventConfig.middlewares || !eventConfig.middlewares.length || !middlewares.length) return []
+const getRouteMiddlewares = (actorConfig) => {
 
-  return eventConfig.middlewares.map(x => {
+  let routeMiddleware = Object.values(routeMiddlewares).map(middleware => middleware(actorConfig))
+
+  if (!actorConfig.middlewares || !actorConfig.middlewares.length || !middlewares.length) {
+    return routeMiddleware;
+  }
+
+  return actorConfig.middlewares.map(x => {
     const middleware = middlewares[x]
     if (middleware) {
       return middleware;
@@ -31,6 +31,8 @@ const buildActor = (actorPath, actorConfig) => {
   const defaultConfig = {
     route: actorPath,
     method: 'get',
+    public: true,
+    contentType: 'json',
     action: (req, res, next) => {
       console.log('actor not implemented');
       next()
@@ -50,33 +52,71 @@ const buildActor = (actorPath, actorConfig) => {
   }
 }
 
+const buildActorResult = (result) => {
+  let defaultResult = {
+    statusCode: 200,
+    data: null
+  }
+
+  if (!isObject(result) || !result.hasOwnProperty('statusCode')) {
+    return Object.assign({}, defaultResult, {
+      data: result
+    })
+  }
+
+  return Object.assign({}, defaultResult, result);
+}
+
+function isObject(val) {
+  return val instanceof Object;
+}
+
+const routeCallback = (actorConfig) => (req, res, next) => {
+  const result = actorConfig.action({
+    ...req.query,
+    ...req.body
+  })
+
+  const {
+    statusCode,
+    data
+  } = buildActorResult(result);
+
+  if (actorConfig.contentType === 'json')
+    res.status(statusCode).json(data)
+  else
+    res.status(statusCode).send(data)
+
+  next();
+};
+
 module.exports = () => {
 
   walk(config.get('actorsDir')).forEach(x => {
     console.log('initialzing route by file: ', Object.keys(x))
 
-    const eventConfig = buildActor(Object.keys(x)[0], Object.values(x)[0]);
+    const actorConfig = buildActor(Object.keys(x)[0], Object.values(x)[0]);
 
-    if (!eventConfig.method) {
-      console.log("Method for doest exists:", eventConfig.method.toLowerCase())
+    if (!actorConfig.method) {
+      console.log("Method for doest exists:", actorConfig.method.toLowerCase())
     }
 
-    console.log(eventConfig);
+    console.log(actorConfig);
 
-    const eventMiddlewares = []; // getEventMiddlewares(eventConfig);
+    const eventMiddlewares = getRouteMiddlewares(actorConfig);
 
-    switch (eventConfig.method.toLowerCase()) {
+    switch (actorConfig.method.toLowerCase()) {
       case "post":
-        router.post(eventConfig.route, [...eventMiddlewares], eventConfig.action)
+        router.post(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
       case "put":
-        router.put(eventConfig.route, [...eventMiddlewares], eventConfig.action)
+        router.put(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
       case "delete":
-        router.delete(eventConfig.route, [...eventMiddlewares], eventConfig.action)
+        router.delete(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
       default:
-        router.get(eventConfig.route, [...eventMiddlewares], eventConfig.action)
+        router.get(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
     }
   })

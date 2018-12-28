@@ -6,7 +6,7 @@ const dynamic_routes = require('./routes/route');
 const errorhandler = require('errorhandler')
 const config = require('./config');
 const pkg = require(`${ROOT_PATH}/package.json`);
-const defaultMiddlewares = require('./middlewares');
+const defaultMiddlewares = require('./middlewares/server');
 
 
 const app = express()
