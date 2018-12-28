@@ -10,7 +10,6 @@ const defaultMiddlewares = require('./middlewares');
 
 
 const app = express()
-//const port = 3000
 
 const server = (() => {
   const env = process.env.NODE_ENV;
