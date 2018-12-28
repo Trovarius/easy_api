@@ -1,9 +1,0 @@
-{
-  "route": "/helloworld",
-  "method": "GET",
-  "middlewares": ["timer.js"],
-  "handlers": [{
-    "type": "node",
-    "name": "helloworld"
-  }]
-}

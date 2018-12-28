@@ -3,8 +3,10 @@ const path = require('path');
 
 const folderExists = (dir) => fs.existsSync(dir)
 
-const walk = (dir) => {
+const walk = (dir, baseDir = null) => {
   let results = [];
+  baseDir = baseDir || dir;
+
   if (!folderExists(dir)) return results;
 
   let list = fs.readdirSync(dir);
@@ -13,10 +15,12 @@ const walk = (dir) => {
     let stat = fs.statSync(file);
     if (stat && stat.isDirectory()) {
       /* Recurse into a subdirectory */
-      results = results.concat(walk(file));
+      results = results.concat(walk(file, baseDir));
     } else {
       /* Is a file */
-      const fileWithoutExtension = path.basename(fileName, '.js');
+      const fileParse = path.parse(file);
+
+      const fileWithoutExtension = fileParse.dir.replace(baseDir, '') + "/" + fileParse.name;
 
       results.push({
         [fileWithoutExtension]: require(file)

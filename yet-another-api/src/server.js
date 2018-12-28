@@ -54,7 +54,7 @@ const server = (() => {
       res.ok('ok')
     });
 
-    app.use('/events', dynamic_routes());
+    app.use('/actors', dynamic_routes());
 
     app.set('json spaces', 2);
     app.set('json replacer', (key, value) => {
