@@ -40,7 +40,7 @@ if (!fs.existsSync('./src/handlers')) {
   fs.mkdirSync('./src/handlers');
 }
 
-if (config.clusters <= 1) {
+if (config.get('clusters') <= 1) {
   server.start((err, data) => {
     if (err) {
       console.log('[APP] initialization failed', err);
@@ -51,7 +51,7 @@ if (config.clusters <= 1) {
 } else if (cluster.isMaster) {
 
   for (let i = 0; i < os.cpus().length; i++) {
-    if (i <= config.clusters) {
+    if (i <= config.get('clusters')) {
       const worker = cluster.fork();
 
       workers.push(worker);
