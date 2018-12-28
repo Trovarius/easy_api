@@ -6,11 +6,10 @@ const dynamic_routes = require('./routes/route');
 const errorhandler = require('errorhandler')
 const config = require('./config');
 const pkg = require(`${ROOT_PATH}/package.json`);
-const defaultMiddlewares = require('./middlewares');
+const defaultMiddlewares = require('./middlewares/server');
 
 
 const app = express()
-//const port = 3000
 
 const server = (() => {
   const env = process.env.NODE_ENV;
@@ -54,7 +53,7 @@ const server = (() => {
       res.ok('ok')
     });
 
-    app.use('/events', dynamic_routes());
+    app.use('/actors', dynamic_routes());
 
     app.set('json spaces', 2);
     app.set('json replacer', (key, value) => {

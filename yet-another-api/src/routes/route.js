@@ -1,24 +1,28 @@
 const fs = require('fs');
 var express = require('express')
-var router = express.Router()
 const config = require('../config')
+const events = require('events');
+const eventEmitter = new events.EventEmitter();
+
+var router = express.Router()
+
 const {
   walk
 } = require('../utils');
 
-let middlewares = [];
-const middlewaresfiles = walk(config.get('middlewaresDir'));
-if (config.get('middlewaresDir') && middlewaresfiles.length) {
+let routeMiddlewares = require('../middlewares/routes');
 
-  let middlewares = middlewaresfiles.reduce((prev, acc) => {
-    return Object.assign({}, prev, acc)
-  })
-}
+console.log(routeMiddlewares)
 
-const getEventMiddlewares = (eventConfig) => {
-  if (!eventConfig.middlewares || !eventConfig.middlewares.length || !middlewares.length) return []
+const getRouteMiddlewares = (actorConfig) => {
 
-  return eventConfig.middlewares.map(x => {
+  let routeMiddleware = Object.values(routeMiddlewares).map(middleware => middleware(actorConfig))
+
+  if (!actorConfig.middlewares || !actorConfig.middlewares.length || !middlewares.length) {
+    return routeMiddleware;
+  }
+
+  return actorConfig.middlewares.map(x => {
     const middleware = middlewares[x]
     if (middleware) {
       return middleware;
@@ -26,69 +30,99 @@ const getEventMiddlewares = (eventConfig) => {
   })
 }
 
-const handlerByType = (type, filePath) => {
-  const spawn = require("child_process").spawn;
-  console.log(type, filePath);
-  return (req, res, next) => {
-    if (type === "python") {
-      const pythonProcess = spawn('python', [filePath + ".py", req, res]);
+const buildActor = (actorPath, actorConfig) => {
 
-      pythonProcess.stdout.on('data', (data) => {
-        console.log(data.toString());
-        res.send(data.toString());
-        next();
-      });
+  const defaultConfig = {
+    route: actorPath,
+    method: 'get',
+    public: true,
+    contentType: 'json',
+    action: (req, res, next) => {
+      console.log('actor not implemented');
+      next()
     }
+  }
+
+  if (typeof actorConfig == 'function') {
+    return {
+      ...defaultConfig,
+      action: actorConfig
+    }
+  }
+
+  return {
+    ...defaultConfig,
+    ...actorConfig
   }
 }
 
-const getEventHandlers = (eventConfig) => {
-  if (!eventConfig.handlers || !eventConfig.handlers.length) return []
+const buildActorResult = (result) => {
+  let defaultResult = {
+    statusCode: 200,
+    data: null
+  }
 
-  return eventConfig.handlers.map(handler => {
+  if (!isObject(result) || !result.hasOwnProperty('statusCode')) {
+    return Object.assign({}, defaultResult, {
+      data: result
+    })
+  }
 
-    if (handler.type == "node")
-      return require(config.get('handlersDir') + handler.name)
-    else
-      return handlerByType(handler.type, config.get('handlersDir') + handler.name)
+  return Object.assign({}, defaultResult, result);
+}
+
+function isObject(val) {
+  return val instanceof Object;
+}
+
+const routeCallback = (actorConfig) => (req, res, next) => {
+  const result = actorConfig.action({
+    ...req.query,
+    ...req.body
   })
+
+  const {
+    statusCode,
+    data
+  } = buildActorResult(result);
+
+  if (actorConfig.contentType === 'json')
+    res.status(statusCode).json(data)
+  else
+    res.status(statusCode).send(data)
+
+  next();
+};
+
+const buildEventSoursing = () => {
+
 }
 
 module.exports = () => {
 
-  walk(config.get('eventsDir')).forEach(x => {
+  walk(config.get('actorsDir')).forEach(x => {
     console.log('initialzing route by file: ', Object.keys(x))
 
-    const eventConfig = Object.values(x)[0];
+    const actorConfig = buildActor(Object.keys(x)[0], Object.values(x)[0]);
 
-    if (!eventConfig.method) {
-      console.log("Method for doest exists:", eventConfig.method.toLowerCase())
+    if (!actorConfig.method) {
+      console.log("Method for doest exists:", actorConfig.method.toLowerCase())
     }
 
-    const eventMiddlewares = getEventMiddlewares(eventConfig);
-    const eventHandlers = getEventHandlers(eventConfig);
+    const eventMiddlewares = getRouteMiddlewares(actorConfig);
 
-    switch (eventConfig.method.toLowerCase()) {
+    switch (actorConfig.method.toLowerCase()) {
       case "post":
-        router.post(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
-          next();
-        })
+        router.post(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
       case "put":
-        router.put(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
-          next();
-        })
+        router.put(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
       case "delete":
-        router.delete(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
-          next();
-        })
+        router.delete(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
-
       default:
-        router.get(eventConfig.route, [...eventMiddlewares, ...eventHandlers], (req, res, next) => {
-          next();
-        })
+        router.get(actorConfig.route, [...eventMiddlewares], routeCallback(actorConfig))
         break;
     }
   })

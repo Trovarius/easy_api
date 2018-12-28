@@ -1,9 +1,0 @@
-{
-  "route": "/user",
-  "method": "GET",
-  "middlewares": ["timer.js"],
-  "handlers": [{
-    "type": "node",
-    "name": "user/get"
-  }]
-}

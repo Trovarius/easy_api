@@ -65,8 +65,6 @@ if (config.get('clusters') <= 1) {
 
   cluster.on('exit', function () {
     console.log(`Worker ${process.pid} stopped`);
-    cluster.fork();
-    console.log(`Worker ${process.pid} restared`);
   });
 
 } else {
