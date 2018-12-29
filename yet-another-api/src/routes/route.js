@@ -1,9 +1,14 @@
 const fs = require('fs');
 var express = require('express')
 const config = require('../config')
-const events = require('events');
-const eventEmitter = new events.EventEmitter();
-let events = [];
+const {
+  loadActors,
+  buildActorResult
+} = require('../actors');
+
+const {
+  $event
+} = require('../eventSource');
 
 var router = express.Router()
 
@@ -31,55 +36,13 @@ const getRouteMiddlewares = (actorConfig) => {
   })
 }
 
-const buildActor = (actorPath, actorConfig) => {
+const routeCallback = (actorConfig) => async (req, res, next) => {
 
-  const defaultConfig = {
-    route: actorPath,
-    method: 'get',
-    public: true,
-    contentType: 'json',
-    action: (req, res, next) => {
-      console.log('actor not implemented');
-      next()
-    }
-  }
 
-  if (typeof actorConfig == 'function') {
-    return {
-      ...defaultConfig,
-      action: actorConfig
-    }
-  }
-
-  return {
-    ...defaultConfig,
-    ...actorConfig
-  }
-}
-
-const buildActorResult = (result) => {
-  let defaultResult = {
-    statusCode: 200,
-    data: null
-  }
-
-  if (!isObject(result) || !result.hasOwnProperty('statusCode')) {
-    return Object.assign({}, defaultResult, {
-      data: result
-    })
-  }
-
-  return Object.assign({}, defaultResult, result);
-}
-
-function isObject(val) {
-  return val instanceof Object;
-}
-
-const routeCallback = (actorConfig) => (req, res, next) => {
-  const result = actorConfig.action({
+  const result = await actorConfig.action({
     ...req.query,
-    ...req.body
+    ...req.body,
+    $event
   })
 
   const {
@@ -95,39 +58,17 @@ const routeCallback = (actorConfig) => (req, res, next) => {
   next();
 };
 
-const toCamelCase = function (str) {
-  return str
-    .replace(/\s(.)/g, function ($1) {
-      return $1.toUpperCase();
-    })
-    .replace(/\s/g, '')
-    .replace(/^(.)/, function ($1) {
-      return $1.toLowerCase();
-    });
-}
-
-const buildEventSoursing = (actorConfig) => {
-  const normalizeName = toCamelCase(actorConfig.route)
-
-  events.push({
-    [normalizeName]: (params) => {
-      eventEmitter.emit(normalizeName, params)
-    }
-  })
-
-  eventEmitter.on(normalizeName, actorConfig.action)
-}
-
 module.exports = () => {
+  const actors = loadActors();
 
-  walk(config.get('actorsDir')).forEach(x => {
-    console.log('initialzing route by file: ', Object.keys(x))
-
-    const actorConfig = buildActor(Object.keys(x)[0], Object.values(x)[0]);
+  actors.forEach(actorConfig => {
+    console.log('initialzing route: ', actorConfig)
 
     if (!actorConfig.method) {
-      console.log("Method for doest exists:", actorConfig.method.toLowerCase())
+      console.log("Method doest exists:", actorConfig)
     }
+
+    $event.register(actorConfig);
 
     const eventMiddlewares = getRouteMiddlewares(actorConfig);
 

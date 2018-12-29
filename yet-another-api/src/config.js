@@ -8,7 +8,7 @@ module.exports = nconf
   .file(path.join(process.cwd(), `yaa-config.${process.env.NODE_ENV}.json`))
   .file(path.join(process.cwd(), 'yaa-config.json'))
   .defaults({
-    "actorsDir": path.join(process.cwd(), "src/actors/"),
+    "actorsDir": path.join(process.cwd(), "actors/"),
     "middlewaresDir": path.join(process.cwd(), "src/middlewares/"),
     "PORT": 4000,
     "clusters": 1,

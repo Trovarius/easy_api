@@ -1,7 +1,24 @@
 const walk = require('./walk')
 const normalizePath = require('./normalizePath')
 
+function isObject(val) {
+  return val instanceof Object;
+}
+
+const toCamelCase = function (str) {
+  return str
+    .replace(/\s(.)/g, function ($1) {
+      return $1.toUpperCase();
+    })
+    .replace(/\s/g, '')
+    .replace(/^(.)/, function ($1) {
+      return $1.toLowerCase();
+    });
+}
+
 module.exports = {
   walk,
-  normalizePath
+  normalizePath,
+  isObject,
+  toCamelCase
 }
