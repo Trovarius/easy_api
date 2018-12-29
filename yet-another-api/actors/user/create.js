@@ -6,9 +6,10 @@ module.exports = {
   body: {
 
   },
-  action: (req, res, next) => {
-    res.ok('create action');
-    next();
+  action: ({
+    name
+  }) => {
+    return `new user named: ${name}`
   },
   tiggers: [
 

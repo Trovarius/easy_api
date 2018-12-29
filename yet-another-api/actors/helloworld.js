@@ -14,11 +14,15 @@ module.exports = {
     console.log(this);
 
     const userGetEvent = await $event.dispatch('userGet');
+    const userCReateEvent = await $event.dispatch('userCreate', {
+      name
+    });
 
     return {
       name,
       mensagem: 'oi',
-      userGetEventResult: userGetEvent
+      userGetEventResult: userGetEvent,
+      userCReateEvent
     }
   },
   tiggers: [
