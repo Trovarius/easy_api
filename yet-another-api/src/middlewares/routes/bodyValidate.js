@@ -1,8 +1,8 @@
 const Joi = require('joi');
 
 module.exports = (options) => (req, res, next) => {
-    if (options && options.body && Object.keys(options.body).length) {
-        const schema = Joi.object().keys(options.body);
+    if (options && options.validations && Object.keys(options.validations).length) {
+        const schema = Joi.object().keys(options.validations);
         const {
             error,
             value

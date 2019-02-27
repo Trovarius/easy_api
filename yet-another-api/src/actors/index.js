@@ -6,6 +6,14 @@ const {
 
 const config = require('../config')
 
+const buildRoute = (actorPath, actorConfig) => {
+  if (!actorConfig.route) return actorPath;
+
+  if (actorConfig.route[0] === "/") return actorConfig.route;
+
+  return `${actorPath}/${actorConfig.route}`;
+}
+
 const buildActor = (actorPath, actorConfig) => {
 
   const defaultConfig = {
@@ -14,6 +22,9 @@ const buildActor = (actorPath, actorConfig) => {
     method: 'get',
     public: true,
     contentType: 'json',
+    $event: null,
+    middleware: [],
+    body: null,
     action: (req, res, next) => {
       console.log('actor not implemented');
       next()
@@ -29,7 +40,8 @@ const buildActor = (actorPath, actorConfig) => {
 
   return {
     ...defaultConfig,
-    ...actorConfig
+    ...actorConfig,
+    route: buildRoute(actorPath, actorConfig)
   }
 }
 

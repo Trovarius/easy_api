@@ -28,17 +28,6 @@ process.on('SIGTERM', shutdown)
     console.log('Node process exit with code: %s', code);
   });
 
-if (!fs.existsSync('./src/events')) {
-  fs.mkdirSync('./src/events');
-}
-
-if (!fs.existsSync('./src/middlewares')) {
-  fs.mkdirSync('./src/middlewares');
-}
-
-if (!fs.existsSync('./src/handlers')) {
-  fs.mkdirSync('./src/handlers');
-}
 
 if (config.get('clusters') <= 1) {
   server.start((err, data) => {

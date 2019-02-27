@@ -1,10 +1,16 @@
 const Joi = require('joi');
 
-module.exports = {
-  middlewares: [
+const timeMiddleware = (req, res, next) => {
+  console.log('personal timer log')
+  next();
+}
 
+module.exports = {
+  route: ':name',
+  middlewares: [
+    timeMiddleware
   ],
-  body: {
+  validations: {
     name: Joi.string()
   },
   action: async ({

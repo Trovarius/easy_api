@@ -24,22 +24,21 @@ const getRouteMiddlewares = (actorConfig) => {
 
   let routeMiddleware = Object.values(routeMiddlewares).map(middleware => middleware(actorConfig))
 
-  if (!actorConfig.middlewares || !actorConfig.middlewares.length || !middlewares.length) {
+  if (!actorConfig.middlewares || !actorConfig.middlewares.length) {
     return routeMiddleware;
   }
 
-  return actorConfig.middlewares.map(x => {
-    const middleware = middlewares[x]
-    if (middleware) {
-      return middleware;
-    }
-  })
+  return [...routeMiddleware, ...actorConfig.middlewares]
 }
 
 const routeCallback = (actorConfig) => async (req, res, next) => {
 
+  actorConfig.$event = $event;
+
+  console.log(req.params);
 
   const result = await actorConfig.action({
+    ...req.params,
     ...req.query,
     ...req.body,
     $event
@@ -62,7 +61,7 @@ module.exports = () => {
   const actors = loadActors();
 
   actors.forEach(actorConfig => {
-    console.log('initialzing route: ', actorConfig)
+    console.log('initialazing route: ', actorConfig)
 
     if (!actorConfig.method) {
       console.log("Method doest exists:", actorConfig)
